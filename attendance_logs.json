@@ -1,0 +1,102 @@
+[
+    {
+        "id": "1788751670-3085b559",
+        "employee_id": 1001,
+        "employee_name": "Alicia Morgan",
+        "date": "2026-09-07",
+        "day": "Monday",
+        "clock_in": "11:27 AM",
+        "clock_out": "11:28 AM",
+        "status": "Completed"
+    },
+    {
+        "id": "1788758469-2bf72e55",
+        "employee_id": 1002,
+        "employee_name": "Marcus Hill",
+        "date": "2026-09-07",
+        "day": "Monday",
+        "clock_in": "01:21 PM",
+        "clock_out": "03:50 PM",
+        "status": "Completed"
+    },
+    {
+        "id": "1788759173-9745426a",
+        "employee_id": 2010,
+        "employee_name": "Prince Perez",
+        "date": "2026-09-07",
+        "day": "Monday",
+        "clock_in": "01:32 PM",
+        "clock_out": "04:06 PM",
+        "status": "Completed"
+    },
+    {
+        "id": "1788768025-2b6d6b4e",
+        "employee_id": 1003,
+        "employee_name": "Priya Nair",
+        "date": "2026-09-07",
+        "day": "Monday",
+        "clock_in": "04:00 PM",
+        "clock_out": "04:01 PM",
+        "status": "Completed"
+    },
+    {
+        "id": "1788825198-74ec5c61",
+        "employee_id": 1001,
+        "employee_name": "Alicia Morgan",
+        "date": "2026-09-08",
+        "day": "Tuesday",
+        "clock_in": "Time Off",
+        "clock_out": "Time Off",
+        "status": "Approved Time-Off"
+    },
+    {
+        "id": "1788911539-6349893f",
+        "employee_id": 1001,
+        "employee_name": "Alicia Morgan",
+        "date": "2026-09-09",
+        "day": "Wednesday",
+        "clock_in": "09:00 AM",
+        "clock_out": "Time Off",
+        "status": "Adjusted - Present"
+    },
+    {
+        "id": "1788917308-c46c6f9b",
+        "employee_id": 1002,
+        "employee_name": "Marcus Hill",
+        "date": "2026-09-09",
+        "day": "Wednesday",
+        "clock_in": "09:28 AM",
+        "clock_out": "",
+        "status": "On time"
+    },
+    {
+        "id": "1788920518-8d7b57b4",
+        "employee_id": 2010,
+        "employee_name": "Prince Perez",
+        "date": "2026-09-09",
+        "day": "Wednesday",
+        "clock_in": "Time Off",
+        "clock_out": "Time Off",
+        "status": "Approved Time-Off"
+    },
+    {
+        "id": "1788920586-3f359192",
+        "employee_id": 2010,
+        "employee_name": "Prince Perez",
+        "date": "2026-09-08",
+        "day": "Tuesday",
+        "clock_in": "08:00 AM",
+        "clock_out": "",
+        "status": "Adjusted - Present"
+    },
+    {
+        "id": "1788920767-3e461ccf",
+        "employee_id": 2004,
+        "employee_name": "Daniel Cruz",
+        "date": "2026-09-08",
+        "day": "Tuesday",
+        "clock_in": "Time Off",
+        "clock_out": "Time Off",
+        "status": "Approved Time-Off"
+    }
+]

@@ -1,0 +1,26 @@
+[
+    {
+        "employee_id": 1001,
+        "employee_name": "Alicia Morgan",
+        "department": "Human Resources",
+        "leave_type": "Sick Leave",
+        "start_date": "2026-09-15",
+        "end_date": "2026-09-16",
+        "reason": "Seasonal cold",
+        "status": "Approved",
+        "submitted_at": "2026-09-04 05:51:38",
+        "id": "1788506515-068079ac"
+    },
+    {
+        "employee_id": 1002,
+        "employee_name": "Marcus Hill",
+        "department": "Engineering",
+        "leave_type": "Sick Leave",
+        "start_date": "2026-09-10",
+        "end_date": "2026-09-10",
+        "reason": "personal leave",
+        "status": "Approved",
+        "submitted_at": "2026-09-04 07:13:35",
+        "id": "1788506515-64be9de8"
+    }
+]
