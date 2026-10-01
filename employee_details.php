@@ -9,8 +9,21 @@ $currentEmployee = currentEmployee();
 $selectedEmployeeId = isset($_GET['id']) ? (int) $_GET['id'] : (int) $currentEmployee['id'];
 $employee = getEmployeeById($selectedEmployeeId) ?? $currentEmployee;
 $isAdminView = isAdmin() && isset($_GET['id']);
+$isOwnProfile = $selectedEmployeeId === (int) $currentEmployee['id'];
+$isManagerTeamView = isManager() && !$isOwnProfile && in_array($selectedEmployeeId, array_map(
+    static fn (array $e): int => (int) $e['id'],
+    getTeamMembers((int) $currentEmployee['id'])
+), true);
+// A manager can open a direct report's profile to view it, but only an
+// admin or the profile's own owner may submit edits — viewing someone
+// else's page must never double as an edit form for that person.
+$canEdit = $isAdminView || $isOwnProfile;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['update_section'])) {
+if (!$isOwnProfile && !$isAdminView && !$isManagerTeamView) {
+    redirect('employee_details.php');
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['update_section']) && $canEdit) {
     $section = (string) $_POST['update_section'];
     $updates = [];
 
@@ -141,7 +154,13 @@ $detailSections = [
                 <?php if (isAdmin()): ?>
                     <a href="admin_dashboard.php" class="nav-link">Admin Dashboard</a>
                     <a href="employee_details.php?id=<?php echo (int) $employee['id']; ?>" class="nav-link active">Employee Details</a>
+                <?php elseif ($isManagerTeamView): ?>
+                    <a href="manager_dashboard.php" class="nav-link">Manager Dashboard</a>
+                    <a href="employee_details.php?id=<?php echo (int) $employee['id']; ?>" class="nav-link active">Employee Details</a>
                 <?php else: ?>
+                    <?php if (isManager()): ?>
+                        <a href="manager_dashboard.php" class="nav-link">Manager Dashboard</a>
+                    <?php endif; ?>
                     <a href="dashboard.php" class="nav-link">Dashboard</a>
                     <a href="employee_details.php" class="nav-link active">Employee Details</a>
                     <a href="leave_application.php" class="nav-link">Leave Application</a>
@@ -164,6 +183,10 @@ $detailSections = [
                     <div class="topbar-actions">
                         <a href="admin_employee_dashboard.php" class="mini-btn approve">Back to employee list</a>
                         <a href="admin_dashboard.php" class="mini-btn approve">Back to admin dashboard</a>
+                    </div>
+                <?php elseif ($isManagerTeamView): ?>
+                    <div class="topbar-actions">
+                        <a href="manager_dashboard.php" class="mini-btn approve">Back to manager dashboard</a>
                     </div>
                 <?php endif; ?>
             </header>
@@ -193,19 +216,20 @@ $detailSections = [
                             <?php endforeach; ?>
                         </div>
                         <div class="section-edit-wrap">
-                            <?php if ($sectionKey === 'Basic Information'): ?>
+                            <?php if ($canEdit && $sectionKey === 'Basic Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="basic">Edit</button>
-                            <?php elseif ($sectionKey === 'Government Information'): ?>
+                            <?php elseif ($canEdit && $sectionKey === 'Government Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="government">Edit</button>
-                            <?php elseif ($sectionKey === 'Work Information'): ?>
+                            <?php elseif ($canEdit && $sectionKey === 'Work Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="work">Edit</button>
-                            <?php elseif ($sectionKey === 'Work Schedule'): ?>
+                            <?php elseif ($canEdit && $sectionKey === 'Work Schedule'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="schedule">Edit</button>
                             <?php endif; ?>
                         </div>
                     </details>
                 <?php endforeach; ?>
 
+                <?php if ($canEdit): ?>
                 <div id="editSectionModal" class="edit-modal hidden">
                     <div class="edit-modal-content">
                         <div class="edit-modal-header">
@@ -225,6 +249,7 @@ $detailSections = [
                         </form>
                     </div>
                 </div>
+                <?php endif; ?>
             </section>
         </main>
     </div>

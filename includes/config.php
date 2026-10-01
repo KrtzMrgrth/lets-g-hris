@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// Set once, here, so every page and every attendance/date calculation
+// (today, "now", record timestamps, etc.) agrees on the same timezone
+// regardless of which page happens to run first in a request.
+date_default_timezone_set('Asia/Manila');
+
 const DATA_DIR = __DIR__ . '/../data';
 const EMPLOYEES_FILE = DATA_DIR . '/employees.json';
 const LEAVE_FILE = DATA_DIR . '/leave_applications.json';
@@ -321,6 +326,10 @@ function getEmployees(): array
         $employees[$index]['join_date'] = $employee['join_date'] ?? date('Y-m-d');
         $employees[$index]['avatar'] = $employee['avatar'] ?? strtoupper(substr($employees[$index]['name'], 0, 2));
         $employees[$index]['is_admin'] = !empty($employee['is_admin']);
+        $employees[$index]['account_role'] = $employee['account_role'] ?? (!empty($employee['is_admin']) ? 'admin' : 'employee');
+        $employees[$index]['manager_id'] = isset($employee['manager_id']) ? (int) $employee['manager_id'] : 0;
+        // Keep is_admin in sync with account_role so every existing isAdmin() check still works.
+        $employees[$index]['is_admin'] = $employees[$index]['is_admin'] || $employees[$index]['account_role'] === 'admin';
         $employees[$index]['leave_entitlements'] = getLeaveEntitlements((string) $employees[$index]['employment_type']);
 
         $defaultBirthdays = [
@@ -402,7 +411,52 @@ function isAdmin(): bool
         return false;
     }
 
-    return !empty($employee['is_admin']) || strtolower((string) $employee['role']) === 'administrator';
+    return !empty($employee['is_admin']) || strtolower((string) ($employee['account_role'] ?? '')) === 'admin' || strtolower((string) $employee['role']) === 'administrator';
+}
+
+/**
+ * True when the logged-in employee's account_role is 'manager'. A manager
+ * is still a regular employee too (they keep their own profile/leave/
+ * attendance) — this just adds a scoped-down monitoring/approval view for
+ * whoever lists them as manager_id.
+ */
+function isManager(): bool
+{
+    if (!isLoggedIn()) {
+        return false;
+    }
+
+    $employee = currentEmployee();
+    if (!$employee) {
+        return false;
+    }
+
+    return strtolower((string) ($employee['account_role'] ?? '')) === 'manager';
+}
+
+/**
+ * Direct reports of the given manager, i.e. employees whose manager_id
+ * points at this manager's employee id.
+ */
+function getTeamMembers(int $managerId): array
+{
+    if ($managerId <= 0) {
+        return [];
+    }
+
+    return array_values(array_filter(getEmployees(), static fn (array $e): bool => (int) ($e['manager_id'] ?? 0) === $managerId));
+}
+
+/**
+ * Employees eligible to be picked as someone's manager in the "Reports to"
+ * dropdown: anyone with an account_role of manager or admin.
+ */
+function getManagerOptions(): array
+{
+    return array_values(array_filter(getEmployees(), static function (array $e): bool {
+        $role = strtolower((string) ($e['account_role'] ?? ''));
+        return $role === 'manager' || $role === 'admin';
+    }));
 }
 
 function redirect(string $path): void
@@ -541,7 +595,7 @@ function getEmployeeAttendanceRecords(int $employeeId): array
             return $cmp;
         }
 
-        return strcmp((string) ($b['clock_in'] ?? ''), (string) ($a['clock_in'] ?? ''));
+        return attendanceTimeToMinutes((string) ($b['clock_in'] ?? '')) <=> attendanceTimeToMinutes((string) ($a['clock_in'] ?? ''));
     });
 
     return $filtered;
@@ -567,7 +621,46 @@ function addEmployeeAttendanceRecord(array $record): void
     saveJson(ATTENDANCE_FILE, $records);
 }
 
-function applyAttendanceOverride(int $employeeId, string $date, string $action, string $clockIn = '09:00 AM'): bool
+/**
+ * Normalizes a time value coming from either an HTML <input type="time">
+ * (24-hour "HH:MM") or an already-formatted 12-hour string ("09:00 AM")
+ * into the canonical "h:i A" format used throughout attendance_logs.json.
+ * Falls back to $default when the input can't be parsed.
+ */
+function formatClockTime(string $rawTime, string $default = '09:00 AM'): string
+{
+    $rawTime = trim($rawTime);
+    if ($rawTime === '') {
+        return $default;
+    }
+
+    foreach (['H:i', 'h:i A', 'h:i a'] as $format) {
+        $parsed = DateTimeImmutable::createFromFormat($format, $rawTime);
+        if ($parsed !== false) {
+            return $parsed->format('h:i A');
+        }
+    }
+
+    return $default;
+}
+
+/**
+ * Converts a stored clock time ("09:00 AM", "Time Off", "", etc.) into
+ * minutes-since-midnight so attendance records can be sorted chronologically
+ * instead of alphabetically (plain string comparison puts "01:00 PM" before
+ * "11:00 AM" because "0" < "1", which is wrong).
+ */
+function attendanceTimeToMinutes(string $time): int
+{
+    $parsed = DateTimeImmutable::createFromFormat('h:i A', trim($time));
+    if ($parsed === false) {
+        return -1;
+    }
+
+    return ((int) $parsed->format('H')) * 60 + (int) $parsed->format('i');
+}
+
+function applyAttendanceOverride(int $employeeId, string $date, string $action, string $clockIn = '', string $clockOut = ''): bool
 {
     $employee = getEmployeeById($employeeId);
     if ($employee === null || $date === '') {
@@ -589,12 +682,20 @@ function applyAttendanceOverride(int $employeeId, string $date, string $action, 
         'employee_name' => $employee['name'],
         'date' => $date,
         'day' => date('l', strtotime($date)),
+        'clock_in' => '',
+        'clock_out' => '',
     ];
 
     if ($action === 'fix_missed_clock_in') {
-        $record['clock_in'] = trim($clockIn) !== '' ? trim($clockIn) : '09:00 AM';
+        $record['clock_in'] = formatClockTime($clockIn, '09:00 AM');
         $record['clock_out'] = $record['clock_out'] ?? '';
-        $record['status'] = 'Adjusted - Present';
+        $record['status'] = !empty($record['clock_out']) ? 'Completed' : 'Adjusted - Present';
+    } elseif ($action === 'fix_missed_clock_out') {
+        if (empty($record['clock_in']) || $record['clock_in'] === 'Time Off') {
+            return false;
+        }
+        $record['clock_out'] = formatClockTime($clockOut, '06:00 PM');
+        $record['status'] = 'Completed';
     } elseif ($action === 'approve_time_off') {
         $record['clock_in'] = 'Time Off';
         $record['clock_out'] = 'Time Off';

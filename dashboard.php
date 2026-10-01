@@ -9,8 +9,6 @@ if (isAdmin()) {
     redirect('admin_dashboard.php');
 }
 
-date_default_timezone_set('Asia/Manila');
-
 $employee = currentEmployee();
 $leaveRequests = getLeaveApplications();
 $sickLeaveRequests = getSickLeaveApplications();
@@ -23,8 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['attendance_action'])
 
     if ($action === 'clock_in') {
         $existing = getTodayAttendanceByEmployee($employeeId);
+        $existingClockIn = (string) ($existing['clock_in'] ?? '');
 
-        if ($existing !== null && !empty($existing['clock_in'])) {
+        if ($existingClockIn === 'Time Off') {
+            $_SESSION['flash_message'] = 'Today is marked as approved time off, so you cannot clock in.';
+        } elseif ($existing !== null && $existingClockIn !== '') {
             $_SESSION['flash_message'] = 'You have already clocked in today.';
         } else {
             addEmployeeAttendanceRecord([
@@ -45,8 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['attendance_action'])
 
     if ($action === 'clock_out') {
         $existing = getTodayAttendanceByEmployee($employeeId);
+        $existingClockIn = (string) ($existing['clock_in'] ?? '');
 
-        if ($existing === null || empty($existing['clock_in'])) {
+        if ($existingClockIn === 'Time Off') {
+            $_SESSION['flash_message'] = 'Today is marked as approved time off, so there is nothing to clock out of.';
+        } elseif ($existing === null || $existingClockIn === '') {
             $_SESSION['flash_message'] = 'Please clock in before clocking out.';
         } elseif (!empty($existing['clock_out'])) {
             $_SESSION['flash_message'] = 'You have already clocked out today.';
@@ -72,21 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['attendance_request_a
 }
 
 $myAttendanceRecords = getEmployeeAttendanceRecords((int) ($employee['id'] ?? 0));
-$attendanceRecords = [];
 
 $myAttendanceRequests = array_values(array_filter(getAttendanceRequests(), fn($r) => (int) ($r['employee_id'] ?? 0) === (int) ($employee['id'] ?? 0)));
-
-foreach ($employees as $index => $person) {
-    $attendanceRecords[] = [
-        'id' => (int) ($person['id'] ?? 0),
-        'name' => $person['name'] ?? 'Employee',
-        'role' => $person['role'] ?? 'Employee',
-        'department' => $person['department'] ?? 'General',
-        'status' => ($index % 2 === 0) ? 'In office' : 'Out of office',
-        'time_in' => ['08:15 AM', '08:45 AM', '09:00 AM', '08:30 AM'][$index % 4],
-        'time_out' => ['05:30 PM', '06:00 PM', '04:45 PM', '05:15 PM'][$index % 4],
-    ];
-}
 
 $flashMessage = $_SESSION['flash_message'] ?? '';
 unset($_SESSION['flash_message']);
@@ -108,6 +99,9 @@ unset($_SESSION['flash_message']);
             </div>
 
             <nav class="nav-menu">
+                <?php if (isManager()): ?>
+                    <a href="manager_dashboard.php" class="nav-link">Manager Dashboard</a>
+                <?php endif; ?>
                 <a href="dashboard.php" class="nav-link active">Dashboard</a>
                 <a href="employee_details.php" class="nav-link">Employee Details</a>
                 <a href="leave_application.php" class="nav-link">Leave Application</a>
@@ -201,11 +195,11 @@ unset($_SESSION['flash_message']);
                 </div>
 
                 <div class="attendance-clock-actions">
-                    <form method="POST" action="dashboard.php" style="display:inline;">
+                    <form method="POST" action="dashboard.php" style="display:inline;" data-form>
                         <input type="hidden" name="attendance_action" value="clock_in">
                         <button type="submit" class="primary-btn attendance-btn">Clock In</button>
                     </form>
-                    <form method="POST" action="dashboard.php" style="display:inline;">
+                    <form method="POST" action="dashboard.php" style="display:inline;" data-form>
                         <input type="hidden" name="attendance_action" value="clock_out">
                         <button type="submit" class="mini-btn attendance-btn">Clock Out</button>
                     </form>

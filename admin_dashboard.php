@@ -9,8 +9,6 @@ if (!isAdmin()) {
     redirect('dashboard.php');
 }
 
-date_default_timezone_set('Asia/Manila');
-
 $employee = currentEmployee();
 $employees = getEmployees();
 $leaveRequests = getLeaveApplications();
@@ -110,6 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $civil_status = trim((string) ($_POST['civil_status'] ?? ''));
         $phone = trim((string) ($_POST['phone'] ?? ''));
         $manager = trim((string) ($_POST['manager'] ?? ''));
+        $accountRole = trim((string) ($_POST['account_role'] ?? 'employee'));
+        $accountRole = in_array($accountRole, ['admin', 'manager', 'employee'], true) ? $accountRole : 'employee';
+        $managerId = (int) ($_POST['manager_id'] ?? 0);
+        $managerRecord = $managerId > 0 ? getEmployeeById($managerId) : null;
+        $manager = $managerRecord !== null ? (string) $managerRecord['name'] : 'Pending Assignment';
         $location = trim((string) ($_POST['location'] ?? ''));
         $employment_type = trim((string) ($_POST['employment_type'] ?? 'Full-time'));
         $employment_type = $employment_type !== '' ? $employment_type : 'Full-time';
@@ -160,7 +163,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'rest_day' => $rest_day,
                     'attendance_notes' => $attendance_notes,
                     'avatar' => strtoupper(substr($name, 0, 2)),
-                    'is_admin' => false
+                    'is_admin' => $accountRole === 'admin',
+                    'account_role' => $accountRole,
+                    'manager_id' => $managerId,
                 ];
 
                 saveJson(EMPLOYEES_FILE, $employees);
@@ -448,12 +453,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <div class="field-row">
                                         <div>
-                                            <label for="manager">Manager</label>
-                                            <input id="manager" name="manager" type="text" placeholder="Assigned manager">
-                                        </div>
-                                        <div>
                                             <label for="location">Work location</label>
                                             <input id="location" name="location" type="text" placeholder="e.g. Manila, Philippines">
+                                        </div>
+                                        <div></div>
+                                    </div>
+
+                                    <div class="field-row">
+                                        <div>
+                                            <label for="account_role">Account role</label>
+                                            <select id="account_role" name="account_role">
+                                                <option value="employee">Employee</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="manager_id">Reports to</label>
+                                            <select id="manager_id" name="manager_id">
+                                                <option value="0">Pending Assignment</option>
+                                                <?php foreach (getManagerOptions() as $managerOption): ?>
+                                                    <option value="<?php echo (int) $managerOption['id']; ?>"><?php echo htmlspecialchars($managerOption['name']); ?> (<?php echo htmlspecialchars(ucfirst((string) $managerOption['account_role'])); ?>)</option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                     </div>
 

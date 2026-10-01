@@ -1,11 +1,19 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
 
-if (isLoggedIn()) {
+function routeAfterLogin(): void
+{
     if (isAdmin()) {
         redirect('admin_dashboard.php');
     }
+    if (isManager()) {
+        redirect('manager_dashboard.php');
+    }
     redirect('dashboard.php');
+}
+
+if (isLoggedIn()) {
+    routeAfterLogin();
 }
 
 $errorMessage = '';
@@ -18,10 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($employee && isset($employee['password']) && $employee['password'] === $password) {
         $_SESSION['employee_id'] = (int) $employee['id'];
-        if (isAdmin()) {
-            redirect('admin_dashboard.php');
-        }
-        redirect('dashboard.php');
+        routeAfterLogin();
     }
 
     $errorMessage = 'Invalid email or password. Please try again.';
@@ -52,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="credential-panel">
                 <h3>Demo Employee Access</h3>
                 <ul>
-                    <li><strong>Alicia:</strong> alicia@hrs.com / 123456</li>
+                    <li><strong>Alicia (Manager):</strong> alicia@hrs.com / 123456</li>
                     <li><strong>Marcus:</strong> marcus@hrs.com / demo123</li>
                     <li><strong>Priya:</strong> priya@hrs.com / hrpass</li>
                 </ul>
