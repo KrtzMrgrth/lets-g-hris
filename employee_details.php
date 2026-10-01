@@ -9,6 +9,7 @@ $currentEmployee = currentEmployee();
 $selectedEmployeeId = isset($_GET['id']) ? (int) $_GET['id'] : (int) $currentEmployee['id'];
 $employee = getEmployeeById($selectedEmployeeId) ?? $currentEmployee;
 $isAdminView = isAdmin() && isset($_GET['id']);
+$isEmbedded = $isAdminView && (string) ($_GET['embedded'] ?? '') === '1';
 $isOwnProfile = $selectedEmployeeId === (int) $currentEmployee['id'];
 $isManagerTeamView = isManager() && !$isOwnProfile && in_array($selectedEmployeeId, array_map(
     static fn (array $e): int => (int) $e['id'],
@@ -143,7 +144,7 @@ $detailSections = [
     <title>Employee Details | SmartStaff</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body data-employee='<?php echo json_encode($employee, JSON_HEX_APOS | JSON_HEX_QUOT); ?>'>
+<body class="<?php echo $isEmbedded ? 'embedded-details-page' : ''; ?>" data-employee='<?php echo json_encode($employee, JSON_HEX_APOS | JSON_HEX_QUOT); ?>'>
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
@@ -179,16 +180,6 @@ $detailSections = [
                     <p class="eyebrow accent">Profile</p>
                     <h1><?php echo $isAdminView ? 'Employee account details' : 'Employee details'; ?></h1>
                 </div>
-                <?php if (isAdmin()): ?>
-                    <div class="topbar-actions">
-                        <a href="admin_employee_dashboard.php" class="mini-btn approve">Back to employee list</a>
-                        <a href="admin_dashboard.php" class="mini-btn approve">Back to admin dashboard</a>
-                    </div>
-                <?php elseif ($isManagerTeamView): ?>
-                    <div class="topbar-actions">
-                        <a href="manager_dashboard.php" class="mini-btn approve">Back to manager dashboard</a>
-                    </div>
-                <?php endif; ?>
             </header>
 
             <section class="profile-card">

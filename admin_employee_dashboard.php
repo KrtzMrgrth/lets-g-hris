@@ -17,11 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['attendance_override_
     $overrideEmployeeId = (int) ($_POST['employee_id'] ?? 0);
     $overrideDate = trim((string) ($_POST['override_date'] ?? date('Y-m-d')));
     $overrideClockIn = trim((string) ($_POST['override_clock_in'] ?? '09:00 AM'));
+    $overrideClockOut = trim((string) ($_POST['override_clock_out'] ?? '06:00 PM'));
 
-    if (applyAttendanceOverride($overrideEmployeeId, $overrideDate, $overrideAction, $overrideClockIn)) {
+    if (applyAttendanceOverride($overrideEmployeeId, $overrideDate, $overrideAction, $overrideClockIn, $overrideClockOut)) {
         $overrideMessages = [
-            'clock_in' => 'The missed clock-in was corrected.',
-            'clock_out' => 'The missed clock-out was corrected.',
+            'fix_missed_clock_in' => 'The missed clock-in was corrected.',
+            'fix_missed_clock_out' => 'The missed clock-out was corrected.',
+            'approve_time_off' => 'Approved time off was recorded.',
         ];
 
         $_SESSION['flash_message'] = $overrideMessages[$overrideAction] ?? 'Attendance record updated.';
@@ -124,7 +126,7 @@ unset($_SESSION['flash_message']);
     <title>Employee Dashboard | SmartStaff</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
+<body class="admin-layout">
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
@@ -132,10 +134,11 @@ unset($_SESSION['flash_message']);
                 <span>SmartStaff</span>
             </div>
 
-            <nav class="nav-menu">
-                <a href="admin_dashboard.php" class="nav-link">Admin Dashboard</a>
-                <a href="admin_employee_dashboard.php" class="nav-link active">Employee Dashboard</a>
-                <a href="admin_payroll_dashboard.php" class="nav-link">Payslip Dashboard</a>
+            <nav class="nav-menu" aria-label="Admin workspace">
+                <span class="nav-section-label">Admin workspace</span>
+                <a href="admin_dashboard.php" class="nav-link"><span class="nav-link-icon">OV</span>Overview</a>
+                <a href="admin_employee_dashboard.php" class="nav-link active" aria-current="page"><span class="nav-link-icon">EM</span>Employees</a>
+                <a href="admin_payroll_dashboard.php" class="nav-link"><span class="nav-link-icon">PY</span>Payslips</a>
             </nav>
 
             <div class="sidebar-footer">
@@ -179,7 +182,79 @@ unset($_SESSION['flash_message']);
                 </div>
             </section>
 
-            <section class="panel headcount-panel">
+            <section class="panel add-employee-workspace-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow accent">Employee management</p>
+                        <h3>Add employee</h3>
+                    </div>
+                    <span class="badge">New account</span>
+                </div>
+
+                <form method="POST" action="admin_dashboard.php" class="add-employee-quick-form">
+                    <input type="hidden" name="action" value="add_employee">
+                    <input type="hidden" name="return_to" value="admin_employee_dashboard.php">
+
+                    <div class="field-row">
+                        <div>
+                            <label for="employee_name">Full name</label>
+                            <input id="employee_name" name="name" type="text" required>
+                        </div>
+                        <div>
+                            <label for="employee_email">Email</label>
+                            <input id="employee_email" name="email" type="email" required>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <label for="employee_password">Password</label>
+                            <input id="employee_password" name="password" type="text" required>
+                        </div>
+                        <div>
+                            <label for="employee_phone">Phone number</label>
+                            <input id="employee_phone" name="phone" type="text" placeholder="e.g. +63 912 345 6789">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <label for="employee_department">Department</label>
+                            <input id="employee_department" name="department" type="text" required>
+                        </div>
+                        <div>
+                            <label for="employee_role">Job role</label>
+                            <input id="employee_role" name="role" type="text" placeholder="e.g. Developer" required>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <label for="employee_account_role">Account role</label>
+                            <select id="employee_account_role" name="account_role">
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="employee_manager_id">Reports to</label>
+                            <select id="employee_manager_id" name="manager_id">
+                                <option value="0">Pending Assignment</option>
+                                <?php foreach (getManagerOptions() as $managerOption): ?>
+                                    <option value="<?php echo (int) $managerOption['id']; ?>"><?php echo htmlspecialchars($managerOption['name']); ?> (<?php echo htmlspecialchars(ucfirst((string) $managerOption['account_role'])); ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="add-employee-quick-actions">
+                        <button type="submit" class="primary-btn">Add employee</button>
+                        <a href="#employee-list" class="mini-btn approve">View employee list</a>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel headcount-panel" id="employee-list">
                 <div class="panel-header">
                     <div>
                         <p class="eyebrow accent">Workforce overview</p>
@@ -208,6 +283,7 @@ unset($_SESSION['flash_message']);
                     <div>
                         <p class="eyebrow accent">Quick actions</p>
                         <h3>Time-Off Overrides</h3>
+                        <p class="panel-helper">Correct attendance or approve time off for a selected date.</p>
                     </div>
                     <span class="badge">Attendance fixes</span>
                 </div>
@@ -228,9 +304,14 @@ unset($_SESSION['flash_message']);
                         <label for="override_clock_in">Clock-in time</label>
                         <input id="override_clock_in" name="override_clock_in" type="text" value="09:00 AM">
                     </div>
+                    <div>
+                        <label for="override_clock_out">Clock-out time</label>
+                        <input id="override_clock_out" name="override_clock_out" type="text" value="06:00 PM">
+                    </div>
                     <div class="attendance-override-actions">
-                        <button type="submit" name="attendance_override_action" value="clock_in" class="mini-btn approve">Clock In</button>
-                        <button type="submit" name="attendance_override_action" value="clock_out" class="mini-btn reject">Clock Out</button>
+                        <button type="submit" name="attendance_override_action" value="fix_missed_clock_in" class="mini-btn approve">Fix clock-in</button>
+                        <button type="submit" name="attendance_override_action" value="fix_missed_clock_out" class="mini-btn reject">Fix clock-out</button>
+                        <button type="submit" name="attendance_override_action" value="approve_time_off" class="mini-btn time-off">Approve time off</button>
                     </div>
                 </form>
             </section>
@@ -244,7 +325,7 @@ unset($_SESSION['flash_message']);
 
                     <div class="list-table">
                         <?php foreach ($employees as $person): ?>
-                            <a href="employee_details.php?id=<?php echo (int) $person['id']; ?>" class="employee-row-link">
+                            <a href="employee_details.php?id=<?php echo (int) $person['id']; ?>&embedded=1" class="employee-row-link employee-details-link" data-employee-details-url="employee_details.php?id=<?php echo (int) $person['id']; ?>&embedded=1">
                                 <div class="list-row employee-row">
                                     <div>
                                         <strong><?php echo htmlspecialchars($person['name']); ?></strong>
@@ -305,6 +386,16 @@ unset($_SESSION['flash_message']);
                     </div>
                 </details>
             </section>
+
+            <div class="employee-details-modal" id="employeeDetailsModal" hidden>
+                <div class="employee-details-dialog" role="dialog" aria-modal="true" aria-labelledby="employeeDetailsTitle">
+                    <div class="employee-details-dialog-header">
+                        <h2 id="employeeDetailsTitle">Employee details</h2>
+                        <button type="button" class="close-employee-details" id="closeEmployeeDetails" aria-label="Close employee details">&times;</button>
+                    </div>
+                    <iframe id="employeeDetailsFrame" title="Employee details" loading="lazy"></iframe>
+                </div>
+            </div>
         </main>
     </div>
     <script>
@@ -315,6 +406,38 @@ unset($_SESSION['flash_message']);
                         detail.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 });
+            });
+
+            const detailsModal = document.getElementById('employeeDetailsModal');
+            const detailsFrame = document.getElementById('employeeDetailsFrame');
+            const closeDetailsButton = document.getElementById('closeEmployeeDetails');
+
+            const closeDetails = () => {
+                detailsModal.hidden = true;
+                detailsFrame.src = '';
+                document.body.classList.remove('modal-open');
+            };
+
+            document.querySelectorAll('.employee-details-link').forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    detailsFrame.src = link.dataset.employeeDetailsUrl;
+                    detailsModal.hidden = false;
+                    document.body.classList.add('modal-open');
+                });
+            });
+
+            closeDetailsButton.addEventListener('click', closeDetails);
+            detailsModal.addEventListener('click', (event) => {
+                if (event.target === detailsModal) {
+                    closeDetails();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !detailsModal.hidden) {
+                    closeDetails();
+                }
             });
         });
     </script>

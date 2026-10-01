@@ -197,7 +197,7 @@ if ($selectedPayroll === null && $selectedEmployeeId === 0 && !empty($payrollRec
     <title>Payslip Dashboard | SmartStaff</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
+<body class="admin-layout">
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
@@ -205,10 +205,11 @@ if ($selectedPayroll === null && $selectedEmployeeId === 0 && !empty($payrollRec
                 <span>SmartStaff</span>
             </div>
 
-            <nav class="nav-menu">
-                <a href="admin_dashboard.php" class="nav-link">Admin Dashboard</a>
-                <a href="admin_employee_dashboard.php" class="nav-link">Employee Dashboard</a>
-                <a href="admin_payroll_dashboard.php" class="nav-link active">Payslip Dashboard</a>
+            <nav class="nav-menu" aria-label="Admin workspace">
+                <span class="nav-section-label">Admin workspace</span>
+                <a href="admin_dashboard.php" class="nav-link"><span class="nav-link-icon">OV</span>Overview</a>
+                <a href="admin_employee_dashboard.php" class="nav-link"><span class="nav-link-icon">EM</span>Employees</a>
+                <a href="admin_payroll_dashboard.php" class="nav-link active" aria-current="page"><span class="nav-link-icon">PY</span>Payslips</a>
             </nav>
 
             <div class="sidebar-footer">

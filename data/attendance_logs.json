@@ -5,8 +5,18 @@
         "employee_name": "Alicia Morgan",
         "date": "2026-09-30",
         "day": "Wednesday",
-        "clock_in": "02:44 PM",
+        "clock_in": "09:00 AM",
         "clock_out": "",
-        "status": "On time"
+        "status": "Adjusted - Present"
+    },
+    {
+        "id": "1790824052-6ae4ae65",
+        "employee_id": 1001,
+        "employee_name": "Alicia Morgan",
+        "date": "2026-10-01",
+        "day": "Thursday",
+        "clock_in": "09:00 AM",
+        "clock_out": "",
+        "status": "Adjusted - Present"
     }
 ]

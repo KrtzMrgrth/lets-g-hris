@@ -177,7 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash_message'] = 'Please complete all required fields.';
         }
 
-        redirect('admin_dashboard.php');
+        $returnTo = (string) ($_POST['return_to'] ?? 'admin_dashboard.php');
+        $returnTo = in_array($returnTo, ['admin_dashboard.php', 'admin_employee_dashboard.php'], true)
+            ? $returnTo
+            : 'admin_dashboard.php';
+        redirect($returnTo);
     }
 
     if ($action === 'approve_leave') {
@@ -243,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Admin Dashboard | SmartStaff</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
+<body class="admin-layout">
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
@@ -251,10 +255,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span>SmartStaff</span>
             </div>
 
-            <nav class="nav-menu">
-                <a href="admin_dashboard.php" class="nav-link active">Admin Dashboard</a>
-                <a href="admin_employee_dashboard.php" class="nav-link">Employee Dashboard</a>
-                <a href="admin_payroll_dashboard.php" class="nav-link">Payslip Dashboard</a>
+            <nav class="nav-menu" aria-label="Admin workspace">
+                <span class="nav-section-label">Admin workspace</span>
+                <a href="admin_dashboard.php" class="nav-link active" aria-current="page"><span class="nav-link-icon">OV</span>Overview</a>
+                <a href="admin_employee_dashboard.php" class="nav-link"><span class="nav-link-icon">EM</span>Employees</a>
+                <a href="admin_payroll_dashboard.php" class="nav-link"><span class="nav-link-icon">PY</span>Payslips</a>
             </nav>
 
             <div class="sidebar-footer">
@@ -281,24 +286,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <section class="stats-grid">
                 <div class="stat-card green">
-                    <span class="stat-label">Employees</span>
-                    <strong><?php echo count($employees); ?></strong>
+                    <span class="stat-label">Active employees</span>
+                    <strong><?php echo count(array_filter($employees, fn($person) => strtolower((string) ($person['status'] ?? 'Active')) === 'active')); ?></strong>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Pending Leave</span>
-                    <strong><?php echo count(array_filter($leaveRequests, fn($request) => $request['status'] === 'Pending')); ?></strong>
+                    <span class="stat-label">Present today</span>
+                    <strong><?php echo count($todayAttendanceSummary['present']); ?></strong>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Pending Sick Leave</span>
-                    <strong><?php echo count(array_filter($sickLeaveRequests, fn($request) => $request['status'] === 'Pending')); ?></strong>
+                    <span class="stat-label">Late today</span>
+                    <strong><?php echo count($todayAttendanceSummary['late']); ?></strong>
                 </div>
                 <div class="stat-card dark">
-                    <span class="stat-label">Approved</span>
-                    <strong><?php echo count(array_filter($leaveRequests, fn($request) => $request['status'] === 'Approved')) + count(array_filter($sickLeaveRequests, fn($request) => $request['status'] === 'Approved')); ?></strong>
+                    <span class="stat-label">Pending approvals</span>
+                    <strong><?php echo count(array_filter($leaveRequests, fn($request) => $request['status'] === 'Pending')) + count(array_filter($sickLeaveRequests, fn($request) => $request['status'] === 'Pending')) + count(array_filter($attendanceRequests, fn($request) => $request['status'] === 'Pending')); ?></strong>
                 </div>
             </section>
 
-            <section class="panel attendance-summary-panel">
+            <section class="overview-shortcuts" aria-label="Admin shortcuts">
+                <div>
+                    <p class="eyebrow accent">Workday at a glance</p>
+                    <strong><?php echo count($todayAttendanceSummary['absent']); ?> absent today</strong>
+                    <span><?php echo count($approvedLeaveToday); ?> approved time-off record<?php echo count($approvedLeaveToday) === 1 ? '' : 's'; ?> in effect</span>
+                </div>
+                <div class="overview-shortcut-links">
+                    <a href="admin_employee_dashboard.php" class="mini-btn approve">Manage employees</a>
+                    <a href="admin_payroll_dashboard.php" class="mini-btn approve">Open payslips</a>
+                    <a href="#approval-queue" class="mini-btn time-off">Review approvals</a>
+                </div>
+            </section>
+
+            <section class="panel attendance-summary-panel" id="attendance-overview">
                 <div class="panel-header">
                     <div>
                         <p class="eyebrow accent">Today · <?php echo htmlspecialchars(date('F j, Y')); ?></p>
@@ -338,8 +356,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </section>
 
-            <section class="dashboard-main-row">
-                <details class="panel form-panel add-employee-panel">
+            <section class="dashboard-main-row" id="approval-queue">
+                <details class="panel form-panel add-employee-panel overview-add-employee-legacy">
                     <summary class="panel-header add-employee-summary">
                         <span class="add-employee-button">+ Add employee</span>
                     </summary>
