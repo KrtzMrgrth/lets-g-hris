@@ -10,6 +10,8 @@ if (isAdmin()) {
 }
 
 $employee = currentEmployee();
+$requestTypePreset = (string) ($_GET['type'] ?? '');
+$requestTypePreset = in_array($requestTypePreset, ['Official Business', 'Overtime'], true) ? $requestTypePreset : '';
 $flashMessage = $_SESSION['flash_message'] ?? '';
 unset($_SESSION['flash_message']);
 
@@ -31,6 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash_message'] = 'Official Business requires a location and a time range from and to.';
             redirect('attendance_request.php');
         }
+    }
+
+    if ($requestType === 'Overtime' && ($timeFrom === '' || $timeTo === '')) {
+        $_SESSION['flash_message'] = 'Overtime requires the planned start and end time.';
+        redirect('attendance_request.php?type=Overtime');
     }
 
     addAttendanceRequest([
@@ -112,8 +119,8 @@ $attendanceRequests = array_values(array_filter(getAttendanceRequests(), fn($req
                                     <option value="">Select request</option>
                                     <option>Certificate of Attendance</option>
                                     <option>Schedule Adjustment</option>
-                                    <option>Official Business</option>
-                                    <option>Overtime</option>
+                                    <option <?php echo $requestTypePreset === 'Official Business' ? 'selected' : ''; ?>>Official Business</option>
+                                    <option <?php echo $requestTypePreset === 'Overtime' ? 'selected' : ''; ?>>Overtime</option>
                                     <option>Undertime</option>
                                 </select>
                             </div>
@@ -123,19 +130,19 @@ $attendanceRequests = array_values(array_filter(getAttendanceRequests(), fn($req
                             </div>
                         </div>
 
-                        <div id="official_business_fields" style="display:none;">
+                        <div id="special_attendance_fields" style="display:none;">
                             <div class="field-row">
                                 <div>
-                                    <label for="time_from">Time from</label>
+                                    <label for="time_from">Start time</label>
                                     <input id="time_from" name="time_from" type="time">
                                 </div>
                                 <div>
-                                    <label for="time_to">Time to</label>
+                                    <label for="time_to">End time</label>
                                     <input id="time_to" name="time_to" type="time">
                                 </div>
                             </div>
 
-                            <div class="field-row">
+                            <div class="field-row" id="official_business_location_field">
                                 <div>
                                     <label for="location">Location</label>
                                     <input id="location" name="location" type="text" placeholder="e.g. Makati City Office">
@@ -180,20 +187,24 @@ $attendanceRequests = array_values(array_filter(getAttendanceRequests(), fn($req
     <script src="assets/js/script.js"></script>
     <script>
         const requestTypeField = document.getElementById('request_type');
-        const officialBusinessFields = document.getElementById('official_business_fields');
+        const specialAttendanceFields = document.getElementById('special_attendance_fields');
+        const officialBusinessLocationField = document.getElementById('official_business_location_field');
 
-        function toggleOfficialBusinessFields() {
+        function toggleSpecialAttendanceFields() {
             const isOfficialBusiness = requestTypeField.value === 'Official Business';
-            officialBusinessFields.style.display = isOfficialBusiness ? 'block' : 'none';
+            const isOvertime = requestTypeField.value === 'Overtime';
+            const showSpecialFields = isOfficialBusiness || isOvertime;
+            specialAttendanceFields.style.display = showSpecialFields ? 'block' : 'none';
+            officialBusinessLocationField.style.display = isOfficialBusiness ? 'block' : 'none';
 
-            const fields = officialBusinessFields.querySelectorAll('input');
+            const fields = specialAttendanceFields.querySelectorAll('input');
             fields.forEach((field) => {
-                field.required = isOfficialBusiness;
+                field.required = isOfficialBusiness || (isOvertime && field.id !== 'location');
             });
         }
 
-        requestTypeField.addEventListener('change', toggleOfficialBusinessFields);
-        toggleOfficialBusinessFields();
+        requestTypeField.addEventListener('change', toggleSpecialAttendanceFields);
+        toggleSpecialAttendanceFields();
     </script>
 </body>
 </html>

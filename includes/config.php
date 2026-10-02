@@ -1,9 +1,6 @@
 <?php
 session_start();
 
-// Set once, here, so every page and every attendance/date calculation
-// (today, "now", record timestamps, etc.) agrees on the same timezone
-// regardless of which page happens to run first in a request.
 date_default_timezone_set('Asia/Manila');
 
 const DATA_DIR = __DIR__ . '/../data';
@@ -145,7 +142,7 @@ function ensureAdminExists(): void
 
     foreach ($employees as $index => $employee) {
         $email = strtolower((string) ($employee['email'] ?? ''));
-        if ($email === 'admin@hrs.com' || !empty($employee['is_admin']) || strtolower((string) ($employee['role'] ?? '')) === 'administrator') {
+            if ($email === 'admin@hrs.com' || strtolower((string) ($employee['role'] ?? '')) === 'administrator') {
             $adminIndex = $index;
             $employees[$index]['is_admin'] = true;
             $employees[$index]['role'] = 'Administrator';
@@ -414,12 +411,6 @@ function isAdmin(): bool
     return !empty($employee['is_admin']) || strtolower((string) ($employee['account_role'] ?? '')) === 'admin' || strtolower((string) $employee['role']) === 'administrator';
 }
 
-/**
- * True when the logged-in employee's account_role is 'manager'. A manager
- * is still a regular employee too (they keep their own profile/leave/
- * attendance) — this just adds a scoped-down monitoring/approval view for
- * whoever lists them as manager_id.
- */
 function isManager(): bool
 {
     if (!isLoggedIn()) {
@@ -447,10 +438,6 @@ function getTeamMembers(int $managerId): array
     return array_values(array_filter(getEmployees(), static fn (array $e): bool => (int) ($e['manager_id'] ?? 0) === $managerId));
 }
 
-/**
- * Employees eligible to be picked as someone's manager in the "Reports to"
- * dropdown: anyone with an account_role of manager or admin.
- */
 function getManagerOptions(): array
 {
     return array_values(array_filter(getEmployees(), static function (array $e): bool {
@@ -621,12 +608,6 @@ function addEmployeeAttendanceRecord(array $record): void
     saveJson(ATTENDANCE_FILE, $records);
 }
 
-/**
- * Normalizes a time value coming from either an HTML <input type="time">
- * (24-hour "HH:MM") or an already-formatted 12-hour string ("09:00 AM")
- * into the canonical "h:i A" format used throughout attendance_logs.json.
- * Falls back to $default when the input can't be parsed.
- */
 function formatClockTime(string $rawTime, string $default = '09:00 AM'): string
 {
     $rawTime = trim($rawTime);

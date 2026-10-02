@@ -271,8 +271,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <main class="main-panel">
             <header class="topbar">
                 <div>
-                    <p class="eyebrow accent">Administration</p>
-                    <h1>Admin management panel</h1>
+                    <p class="eyebrow accent">HR operations</p>
+                    <h1>Workforce overview</h1>
                 </div>
                 <div class="topbar-user">
                     <div class="avatar-circle"><?php echo htmlspecialchars($employee['avatar']); ?></div>

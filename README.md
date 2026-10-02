@@ -12,7 +12,8 @@ A simple PHP HR management portal inspired by a clean professional dashboard.
 
 ## Demo login credentials
 - HR Admin — admin@hrs.com / admin123
-- Alicia Morgan — alicia@hrs.com / 123456
+- Alicia Morgan (HR Generalist) — alicia@hrs.com / 123456
+- Sophia Chen (Manager) — sophia.chen@hrs.com / sophia123
 - Marcus Hill — marcus@hrs.com / demo123
 - Priya Nair — priya@hrs.com / hrpass
 

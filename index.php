@@ -46,18 +46,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="brand-block">
                 <div class="brand-mark">HR</div>
                 <div>
-                    <p class="eyebrow">People-first platform</p>
+                    <p class="eyebrow">Human resources information system</p>
                     <h1>SmartStaff</h1>
                 </div>
             </div>
 
-            <h2>Work smarter with a better employee experience.</h2>
-            <p>Track attendance, manage leave requests, and keep team information in one place.</p>
+            <h2>One source of truth for your workforce.</h2>
+            <p>SmartStaff centralizes employee records, attendance, leave, approvals, and payroll operations in one secure workspace.</p>
+
+            <div class="login-capabilities" aria-label="SmartStaff capabilities">
+                <span>Workforce records</span>
+                <span>Attendance operations</span>
+                <span>Leave and approvals</span>
+                <span>Payroll support</span>
+            </div>
 
             <div class="credential-panel">
-                <h3>Demo Employee Access</h3>
+                <h3>Demo workspace access</h3>
                 <ul>
-                    <li><strong>Alicia (Manager):</strong> alicia@hrs.com / 123456</li>
+                    <li><strong>Alicia (HR Generalist):</strong> alicia@hrs.com / 123456</li>
+                    <li><strong>Sophia (Manager):</strong> sophia.chen@hrs.com / sophia123</li>
                     <li><strong>Marcus:</strong> marcus@hrs.com / demo123</li>
                     <li><strong>Priya:</strong> priya@hrs.com / hrpass</li>
                 </ul>

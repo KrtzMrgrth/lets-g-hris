@@ -6,16 +6,16 @@
         "password": "123456",
         "department": "Human Resources",
         "role": "HR Generalist",
-        "manager": "Daniel Lee",
+        "manager": "Board",
         "location": "New York",
         "employment_type": "Full-time",
         "status": "Active",
         "phone": "+1 (212) 555-0148",
         "join_date": "2022-06-10",
         "avatar": "AM",
+        "is_admin": false,
         "birthday": "1995-06-15",
         "salary": 6500,
-        "is_admin": false,
         "schedule_type": "",
         "shift_time": "",
         "work_days": "",
@@ -28,8 +28,8 @@
             "emergency_leave": 7,
             "paid": true
         },
-        "account_role": "manager",
-        "manager_id": 1000
+        "account_role": "employee",
+        "manager_id": 0
     },
     {
         "id": 2004,
@@ -113,6 +113,46 @@
         "manager_id": 0
     },
     {
+        "id": 2012,
+        "name": "Kurtz P. Golla",
+        "email": "kurtz@hrs.com",
+        "password": "123456",
+        "department": "Administration",
+        "role": "Developer",
+        "manager": "Sophia Chen",
+        "location": "Office",
+        "employment_type": "Full-time",
+        "leave_entitlements": {
+            "vacation_leave": 15,
+            "sick_leave": 15,
+            "birthday_leave": 1,
+            "emergency_leave": 7,
+            "paid": true
+        },
+        "status": "Active",
+        "phone": "+1 (000) 000-0000",
+        "join_date": "2026-10-02",
+        "birthday": "2026-10-02",
+        "address": "",
+        "civil_status": "",
+        "sss_number": "",
+        "philhealth_number": "",
+        "pagibig_number": "",
+        "tin_number": "",
+        "tax_status": "Single",
+        "emergency_contact": "",
+        "salary": 0,
+        "schedule_type": "Regular Day Shift",
+        "shift_time": "09:00 AM - 06:00 PM",
+        "work_days": "Mon - Fri",
+        "rest_day": "Saturday",
+        "attendance_notes": "Standard office schedule",
+        "avatar": "KU",
+        "is_admin": false,
+        "account_role": "employee",
+        "manager_id": 2011
+    },
+    {
         "id": 2005,
         "name": "lady queen tanga",
         "email": "ladyqueen@gmail.com",
@@ -164,7 +204,7 @@
             "paid": true
         },
         "account_role": "employee",
-        "manager_id": 0
+        "manager_id": 2011
     },
     {
         "id": 2008,
@@ -200,7 +240,7 @@
         "password": "pass123",
         "department": "Engineering",
         "role": "QA Engineer",
-        "manager": "Alicia Morgan",
+        "manager": "Sophia Chen",
         "location": "Manila",
         "employment_type": "Full-time",
         "status": "Active",
@@ -231,7 +271,7 @@
             "paid": true
         },
         "account_role": "employee",
-        "manager_id": 1001
+        "manager_id": 2011
     },
     {
         "id": 2010,
@@ -280,7 +320,7 @@
         "password": "hrpass",
         "department": "Operations",
         "role": "Operations Lead",
-        "manager": "Alicia Morgan",
+        "manager": "Sophia Chen",
         "location": "San Diego",
         "employment_type": "Contract",
         "status": "Active",
@@ -298,7 +338,7 @@
             "paid": false
         },
         "account_role": "employee",
-        "manager_id": 1001
+        "manager_id": 2011
     },
     {
         "id": 2006,
@@ -326,5 +366,32 @@
         },
         "account_role": "employee",
         "manager_id": 0
+    },
+    {
+        "id": 2011,
+        "name": "Sophia Chen",
+        "email": "sophia.chen@hrs.com",
+        "password": "sophia123",
+        "department": "Engineering",
+        "role": "Engineering Manager",
+        "manager": "HR Admin",
+        "location": "Austin",
+        "employment_type": "Full-time",
+        "status": "Active",
+        "phone": "+1 (512) 555-0188",
+        "join_date": "2026-10-02",
+        "birthday": "1991-04-18",
+        "salary": 8500,
+        "avatar": "SC",
+        "is_admin": false,
+        "leave_entitlements": {
+            "vacation_leave": 15,
+            "sick_leave": 15,
+            "birthday_leave": 1,
+            "emergency_leave": 7,
+            "paid": true
+        },
+        "account_role": "manager",
+        "manager_id": 1000
     }
 ]

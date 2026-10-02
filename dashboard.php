@@ -205,6 +205,17 @@ unset($_SESSION['flash_message']);
                     </form>
                 </div>
 
+                <div class="attendance-special-actions">
+                    <div>
+                        <strong>Need an attendance adjustment?</strong>
+                        <small>Submit overtime or official business for review.</small>
+                    </div>
+                    <div class="attendance-special-links">
+                        <a href="attendance_request.php?type=Overtime" class="mini-btn approve">Request OT</a>
+                        <a href="attendance_request.php?type=Official%20Business" class="mini-btn time-off">File OB</a>
+                    </div>
+                </div>
+
                 <div class="my-attendance-records">
                     <?php if (empty($myAttendanceRecords)): ?>
                         <div class="my-attendance-record">

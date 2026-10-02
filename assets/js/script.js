@@ -9,6 +9,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    if (document.body.classList.contains('manager-layout')) {
+        const managerLinks = document.querySelectorAll('.nav-link[href^="#"]');
+        const managerSections = Array.from(managerLinks)
+            .map((link) => document.querySelector(link.getAttribute('href')))
+            .filter(Boolean);
+
+        const setManagerActive = (targetId) => {
+            managerLinks.forEach((link) => {
+                const isActive = link.getAttribute('href') === `#${targetId}`;
+                link.classList.toggle('active', isActive);
+                if (isActive) {
+                    link.setAttribute('aria-current', 'page');
+                } else {
+                    link.removeAttribute('aria-current');
+                }
+            });
+        };
+
+        managerLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                setManagerActive(link.getAttribute('href').slice(1));
+            });
+        });
+
+        if (managerSections.length > 0 && 'IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                const visibleSection = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+                if (visibleSection) {
+                    setManagerActive(visibleSection.target.id);
+                }
+            }, { rootMargin: '-18% 0px -65% 0px', threshold: [0.1, 0.5, 1] });
+
+            managerSections.forEach((section) => observer.observe(section));
+        }
+    }
+
     const modal = document.getElementById('editSectionModal');
     const modalFields = document.getElementById('editFieldsContainer');
     const sectionField = document.getElementById('updateSectionField');
