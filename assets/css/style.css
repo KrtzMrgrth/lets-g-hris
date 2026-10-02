@@ -151,6 +151,29 @@ h1, h2, h3, p { margin-top: 0; }
     margin-bottom: 20px;
 }
 
+.forgot-password-link,
+.login-back-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--primary-dark);
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.forgot-password-link:hover,
+.login-back-link:hover {
+    text-decoration: underline;
+}
+
+.password-reset-wrapper {
+    grid-template-columns: 1fr 0.9fr;
+}
+
+.password-reset-page .login-card::before {
+    content: "ACCOUNT RECOVERY";
+}
+
 .login-card::before {
     content: "SECURE WORKFORCE ACCESS";
     display: block;
