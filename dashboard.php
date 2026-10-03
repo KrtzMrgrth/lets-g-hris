@@ -76,8 +76,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['attendance_request_a
 }
 
 $myAttendanceRecords = getEmployeeAttendanceRecords((int) ($employee['id'] ?? 0));
+$todayAttendance = getTodayAttendanceByEmployee((int) ($employee['id'] ?? 0));
+$todayAttendanceStatus = $todayAttendance === null
+    ? 'Not started'
+    : ((string) ($todayAttendance['clock_in'] ?? '') === 'Time Off'
+        ? 'Approved time off'
+        : (!empty($todayAttendance['clock_out']) ? 'Completed' : 'In progress'));
 
 $myAttendanceRequests = array_values(array_filter(getAttendanceRequests(), fn($r) => (int) ($r['employee_id'] ?? 0) === (int) ($employee['id'] ?? 0)));
+$pendingAttendanceRequests = count(array_filter($myAttendanceRequests, fn($request) => ($request['status'] ?? '') === 'Pending'));
 
 $flashMessage = $_SESSION['flash_message'] ?? '';
 unset($_SESSION['flash_message']);
@@ -117,8 +124,8 @@ unset($_SESSION['flash_message']);
         <main class="main-panel">
             <header class="topbar">
                 <div>
-                    <p class="eyebrow accent">Welcome back</p>
-                    <h1>Good morning, <?php echo htmlspecialchars(explode(' ', $employee['name'])[0]); ?>.</h1>
+                    <p class="eyebrow accent">Employee self-service</p>
+                    <h1>My workday</h1>
                 </div>
                 <div class="topbar-user">
                     <div class="avatar-circle"><?php echo htmlspecialchars($employee['avatar']); ?></div>
@@ -129,6 +136,19 @@ unset($_SESSION['flash_message']);
             <?php if ($flashMessage !== ''): ?>
                 <div class="alert alert-success dashboard-notice"><?php echo htmlspecialchars($flashMessage); ?></div>
             <?php endif; ?>
+
+            <section class="employee-context-bar">
+                <div class="employee-context-identity">
+                    <div class="avatar-circle"><?php echo htmlspecialchars($employee['avatar']); ?></div>
+                    <div>
+                        <strong><?php echo htmlspecialchars($employee['name']); ?></strong>
+                        <small><?php echo htmlspecialchars($employee['role']); ?> · <?php echo htmlspecialchars($employee['department']); ?></small>
+                    </div>
+                </div>
+                <div class="employee-context-meta"><span>Work location</span><strong><?php echo htmlspecialchars($employee['location'] ?? 'Office'); ?></strong></div>
+                <div class="employee-context-meta"><span>Today’s status</span><strong><?php echo htmlspecialchars($todayAttendanceStatus); ?></strong></div>
+                <a href="employee_details.php" class="mini-btn approve">View my profile</a>
+            </section>
 
             <?php
                 $employeeLeave = array_values(array_filter($leaveRequests, fn($request) => (int) $request['employee_id'] === (int) $employee['id']));
@@ -156,26 +176,29 @@ unset($_SESSION['flash_message']);
 
             <section class="stats-grid">
                 <div class="stat-card green">
-                    <span class="stat-label">Pending Leave</span>
+                    <span class="stat-label">Pending leave</span>
                     <strong><?php echo $employeePendingLeave; ?></strong>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Approved Leave</span>
+                    <span class="stat-label">Approved leave</span>
                     <strong><?php echo $employeeApprovedLeave; ?></strong>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Pending Sick Leave</span>
+                    <span class="stat-label">Pending sick leave</span>
                     <strong><?php echo $employeePendingSickLeave; ?></strong>
                 </div>
                 <div class="stat-card dark">
-                    <span class="stat-label">Approved Sick Leave</span>
+                    <span class="stat-label">Approved sick leave</span>
                     <strong><?php echo $employeeApprovedSickLeave; ?></strong>
                 </div>
             </section>
 
             <section class="attendance-clock-panel panel">
                 <div class="panel-header">
-                    <h3>My Attendance</h3>
+                    <div>
+                        <p class="eyebrow accent">Daily time record</p>
+                        <h3>Attendance &amp; workday</h3>
+                    </div>
                     <span class="badge">Today</span>
                 </div>
 
@@ -248,8 +271,11 @@ unset($_SESSION['flash_message']);
             <section class="content-grid">
                 <div class="panel">
                     <div class="panel-header">
-                        <h3>HR & Attendance</h3>
-                        <span class="badge"></span>
+                        <div>
+                            <p class="eyebrow accent">Compensation</p>
+                            <h3>Payroll summary</h3>
+                        </div>
+                        <span class="badge">Private</span>
                     </div>
                     <details class="pay-details">
                         <summary class="pay-summary">
@@ -343,7 +369,10 @@ unset($_SESSION['flash_message']);
 
                 <div class="panel">
                     <div class="panel-header">
-                        <h3>My leave status</h3>
+                        <div>
+                            <p class="eyebrow accent">Time away</p>
+                            <h3>Leave status</h3>
+                        </div>
                         <span class="badge"><?php echo count($employeeLeave); ?> total</span>
                     </div>
                     <div class="list-table">
@@ -365,7 +394,10 @@ unset($_SESSION['flash_message']);
 
                 <div class="panel">
                     <div class="panel-header">
-                        <h3>My sick leave status</h3>
+                        <div>
+                            <p class="eyebrow accent">Health absence</p>
+                            <h3>Sick leave status</h3>
+                        </div>
                         <span class="badge"><?php echo count($employeeSickLeave); ?> total</span>
                     </div>
                     <div class="list-table">
@@ -387,8 +419,11 @@ unset($_SESSION['flash_message']);
 
                 <div class="panel">
                     <div class="panel-header">
-                        <h3>My attendance requests</h3>
-                        <span class="badge"><?php echo count($myAttendanceRequests); ?> total</span>
+                        <div>
+                            <p class="eyebrow accent">Workday requests</p>
+                            <h3>Attendance requests</h3>
+                        </div>
+                        <span class="badge"><?php echo $pendingAttendanceRequests; ?> pending</span>
                     </div>
                     <div class="list-table">
                         <?php if (empty($myAttendanceRequests)): ?>

@@ -6,7 +6,6 @@ $completedToday = count(array_filter($teamAttendanceToday, fn (array $row): bool
 $timeOffToday = count(array_filter($teamAttendanceToday, fn (array $row): bool => $row['status'] === 'Approved Time-Off'));
 $clockedInToday = count(array_filter($teamAttendanceToday, fn (array $row): bool => $row['status'] === 'Clocked in'));
 $notClockedInToday = count(array_filter($teamAttendanceToday, fn (array $row): bool => $row['status'] === 'Not clocked in'));
-$attendanceTotal = max(count($teamAttendanceToday), 1);
 ?>
 <!doctype html>
 <html lang="en">
@@ -47,25 +46,14 @@ $attendanceTotal = max(count($teamAttendanceToday), 1);
                     </div>
                     <a href="manager_attendance.php" class="mini-btn approve">Full attendance</a>
                 </div>
-                <div class="attendance-dashboard-layout">
-                    <div class="attendance-status-overview">
-                        <div class="attendance-status-card status-completed"><span>Completed</span><strong><?php echo $completedToday; ?></strong><small>Clocked in and out</small></div>
-                        <div class="attendance-status-card status-clocked-in"><span>Clocked in</span><strong><?php echo $clockedInToday; ?></strong><small>Currently working</small></div>
-                        <div class="attendance-status-card status-time-off"><span>Time off</span><strong><?php echo $timeOffToday; ?></strong><small>Approved today</small></div>
-                        <div class="attendance-status-card status-not-clocked"><span>Not clocked in</span><strong><?php echo $notClockedInToday; ?></strong><small>Needs follow-up</small></div>
-                    </div>
-                    <div class="attendance-distribution" aria-label="Attendance distribution">
-                        <div class="attendance-distribution-header"><strong>Team distribution</strong><span><?php echo count($teamAttendanceToday); ?> employees</span></div>
-                        <div class="attendance-distribution-bar">
-                            <span class="distribution-completed" style="width: <?php echo ($completedToday / $attendanceTotal) * 100; ?>%"></span>
-                            <span class="distribution-clocked-in" style="width: <?php echo ($clockedInToday / $attendanceTotal) * 100; ?>%"></span>
-                            <span class="distribution-time-off" style="width: <?php echo ($timeOffToday / $attendanceTotal) * 100; ?>%"></span>
-                            <span class="distribution-not-clocked" style="width: <?php echo ($notClockedInToday / $attendanceTotal) * 100; ?>%"></span>
-                        </div>
-                        <div class="attendance-legend"><span><i class="legend-dot distribution-completed"></i>Completed</span><span><i class="legend-dot distribution-clocked-in"></i>Working</span><span><i class="legend-dot distribution-time-off"></i>Time off</span><span><i class="legend-dot distribution-not-clocked"></i>Needs follow-up</span></div>
-                    </div>
+                <div class="attendance-status-overview">
+                    <div class="attendance-status-card status-completed"><span>Completed</span><strong><?php echo $completedToday; ?></strong><small>Clocked in and out</small></div>
+                    <div class="attendance-status-card status-clocked-in"><span>Clocked in</span><strong><?php echo $clockedInToday; ?></strong><small>Currently working</small></div>
+                    <div class="attendance-status-card status-time-off"><span>Time off</span><strong><?php echo $timeOffToday; ?></strong><small>Approved today</small></div>
+                    <div class="attendance-status-card status-not-clocked"><span>Not clocked in</span><strong><?php echo $notClockedInToday; ?></strong><small>Needs follow-up</small></div>
                 </div>
                 <div class="attendance-dashboard-list">
+                    <div class="attendance-list-heading"><strong>Today’s team status</strong><span><?php echo count($teamAttendanceToday); ?> direct reports</span></div>
                     <?php if (empty($teamAttendanceToday)): ?>
                         <p class="empty-state">No direct reports assigned yet.</p>
                     <?php else: ?>

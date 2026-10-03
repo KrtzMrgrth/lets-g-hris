@@ -18,5 +18,15 @@
         "clock_in": "09:00 AM",
         "clock_out": "",
         "status": "Adjusted - Present"
+    },
+    {
+        "id": "1790918888-a82f99c5",
+        "employee_id": 2012,
+        "employee_name": "Kurtz P. Golla",
+        "date": "2026-10-02",
+        "day": "Friday",
+        "clock_in": "01:28 PM",
+        "clock_out": "",
+        "status": "On time"
     }
 ]

@@ -15,10 +15,12 @@ $isManagerTeamView = isManager() && !$isOwnProfile && in_array($selectedEmployee
     static fn (array $e): int => (int) $e['id'],
     getTeamMembers((int) $currentEmployee['id'])
 ), true);
-// A manager can open a direct report's profile to view it, but only an
-// admin or the profile's own owner may submit edits — viewing someone
-// else's page must never double as an edit form for that person.
-$canEdit = $isAdminView || $isOwnProfile;
+// Admins can maintain every section. Employees can maintain only their
+// personal and government information; manager team views are read-only.
+$editableSections = $isAdminView
+    ? ['basic', 'government', 'work', 'schedule']
+    : ($isOwnProfile ? ['basic', 'government'] : []);
+$canEdit = !empty($editableSections);
 
 if (!$isOwnProfile && !$isAdminView && !$isManagerTeamView) {
     redirect('employee_details.php');
@@ -27,6 +29,11 @@ if (!$isOwnProfile && !$isAdminView && !$isManagerTeamView) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['update_section']) && $canEdit) {
     $section = (string) $_POST['update_section'];
     $updates = [];
+
+    if (!in_array($section, $editableSections, true)) {
+        $_SESSION['flash_message'] = 'You do not have permission to edit this section.';
+        redirect('employee_details.php?id=' . $selectedEmployeeId . ($isEmbedded ? '&embedded=1' : ''));
+    }
 
     if ($section === 'basic') {
         $updates = [
@@ -88,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['update_section']) &&
         saveJson(EMPLOYEES_FILE, $employees);
         $employee = getEmployeeById($selectedEmployeeId) ?? $currentEmployee;
         $_SESSION['flash_message'] = 'Employee details updated successfully.';
-        redirect('employee_details.php?id=' . $selectedEmployeeId);
+        redirect('employee_details.php?id=' . $selectedEmployeeId . ($isEmbedded ? '&embedded=1' : ''));
     }
 }
 
@@ -207,13 +214,13 @@ $detailSections = [
                             <?php endforeach; ?>
                         </div>
                         <div class="section-edit-wrap">
-                            <?php if ($canEdit && $sectionKey === 'Basic Information'): ?>
+                            <?php if (in_array('basic', $editableSections, true) && $sectionKey === 'Basic Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="basic">Edit</button>
-                            <?php elseif ($canEdit && $sectionKey === 'Government Information'): ?>
+                            <?php elseif (in_array('government', $editableSections, true) && $sectionKey === 'Government Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="government">Edit</button>
-                            <?php elseif ($canEdit && $sectionKey === 'Work Information'): ?>
+                            <?php elseif (in_array('work', $editableSections, true) && $sectionKey === 'Work Information'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="work">Edit</button>
-                            <?php elseif ($canEdit && $sectionKey === 'Work Schedule'): ?>
+                            <?php elseif (in_array('schedule', $editableSections, true) && $sectionKey === 'Work Schedule'): ?>
                                 <button type="button" class="mini-btn section-edit-btn" data-section="schedule">Edit</button>
                             <?php endif; ?>
                         </div>
